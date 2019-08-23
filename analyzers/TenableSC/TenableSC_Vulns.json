@@ -1,0 +1,55 @@
+{
+  "name": "TenableSC_Vulns",
+  "version": "0.1",
+  "author": "Jonas Hergenhahn",
+  "url": "https://github.com/jonashergenhahn/cortex-custom-analyzer",
+  "license": "AGPL-V3",
+  "baseConfig": "TenableSC",
+  "config": {
+    "service": "vulns"
+  },
+  "description": "Get vulnerabilities from tenable.sc by ip or fqdn, is not starting a scan",
+  "dataTypeList": [
+    "ip",
+    "fqdn"
+  ],
+  "command": "TenableSC/tenable_sc_analyzer.py",
+  "configurationItems": [
+    {
+      "name": "hostname",
+      "description": "Define the URL to the tenable.sc service",
+      "type": "string",
+      "multi": false,
+      "required": true
+    },
+    {
+      "name": "verify",
+      "description": "Verify ssl cert",
+      "type": "boolean",
+      "multi": false,
+      "required": false,
+      "defaultValue": true
+    },
+    {
+      "name": "repositories",
+      "description": "Define the repositoryIDs to get sources from, empty if not needed",
+      "type": "number",
+      "multi": true,
+      "required": false
+    },
+    {
+      "name": "username",
+      "description": "Define tenable.sc username",
+      "type": "string",
+      "multi": false,
+      "required": true
+    },
+    {
+      "name": "password",
+      "description": "Define tenable.sc password",
+      "type": "string",
+      "multi": false,
+      "required": true
+    }
+  ]
+}
