@@ -115,40 +115,25 @@ class TenableScAnalyzer(Analyzer):
         :return: summary of vulnerabilities severity
         :rtype: dict
         """
-        summary = {}
+        summary = {"info": 0, "low": 0, "medium": 0, "high": 0, "critical": 0}
         if "results" in raw:
-            count = [0, 0, 0, 0, 0]
             for vulnerability in raw["results"]:
-                count[vulnerability["severity"]["id"]] += 1
-            summary["info"] = count[0]
-            summary["low"] = count[1]
-            summary["medium"] = count[2]
-            summary["high"] = count[3]
-            summary["critical"] = count[4]
+                summary[vulnerability["severity"]["name"].lower()] += 1
 
         taxonomies = []
-        level = "info"
+        # mapping severities to level
+        level = {
+            "low": "info",
+            "low": "info",
+            "medium": "suspicious",
+            "high": "malicious",
+            "critical": "malicious"
+        }
         namespace = "tenable.sc"
-        predicate = "Info"
 
-        if summary["info"] > 0:
-            value = summary["info"]
-            taxonomies.append(self.build_taxonomy(level, namespace, predicate, value))
-        if summary["low"] > 0:
-            value = summary["low"]
-            taxonomies.append(self.build_taxonomy(level, namespace, predicate, value))
-        if summary["medium"] > 0:
-            value = summary["medium"]
-            level = "suspicious"
-            taxonomies.append(self.build_taxonomy(level, namespace, predicate, value))
-        if summary["high"] > 0:
-            value = summary["high"]
-            level = "suspicious"
-            taxonomies.append(self.build_taxonomy(level, namespace, predicate, value))
-        if summary["critical"] > 0:
-            value = summary["critical"]
-            level = "malicious"
-            taxonomies.append(self.build_taxonomy(level, namespace, predicate, value))
+        for severity, count in summary:
+            if count > 0:
+                taxonomies.append(self.build_taxonomy(level[severity], namespace, severity, count))
 
         return {"taxonomies": taxonomies}
 
