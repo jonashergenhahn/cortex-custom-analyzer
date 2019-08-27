@@ -19,8 +19,16 @@ class TenableScAnalyzer(Analyzer):
         """
         Analyzer.__init__(self)
 
-        self.repositories = self.get_param("config.repositories", [])
         self.service = self.get_param("config.service", "vulns")
+        self.filters = {}
+
+        # build filter for repository ids
+        try:
+            self.filters["repositoryIDs"] = ("repositoryIDs", "=", ",".join(
+                map(str, self.get_param("config.repositories")))
+            )
+        except (TypeError, KeyError):
+            pass
 
         # just needed to establish connection to sc
         host = self.get_param("config.hostname", "localhost")
@@ -50,61 +58,39 @@ class TenableScAnalyzer(Analyzer):
             # ignore errors while logout
             pass
 
-    def __vulnerabilities_by_fqdn(self, data):
+    def __vulnerabilities(self):
         """
-        Checks the given fqdn in tenable.sc and returns all related vulnerabilities.
+        Get vulns from tenable.sc for filter
 
-        :param data: fqdn to get all vulnerabilities
-        :type data: string
-        :return: a dict with all vulnerabilities associated with given fqdn
+        :return: a dict with all vulnerabilities for filter
         :rtype: dict
         """
-        if self.repositories is None:
-            return self.sc.analysis.vulns(("dnsName", "=", data), json_result=True).json()
-        else:
-            return self.sc.analysis.vulns(("dnsName", "=", data), ("repositoryIDs", "=", self.repositories),
-                                          json_result=True).json()
-
-    def __vulnerabilities_by_ip(self, data):
-        """
-        Checks the given ip in tenable.sc and returns all related vulnerabilities
-
-        :param data: ip address to look up
-        :type data: string
-        :return: a dict with all vulnerabilities associated with given ip
-        :rtype: dict
-        """
-        if self.repositories is None:
-            return self.sc.analysis.vulns(("ip", "=", data), json_result=True)
-        else:
-            return self.sc.analysis.vulns(("ip", "=", data), ("repositoryIDs", "=", self.repositories),
-                                          json_result=True)
+        return self.sc.analysis.vulns(*self.filters.values(), json_result=True)
 
     def run(self):
         """
         Main function acts as controller.
 
         Decides on given data type and service, what functions should be called:
-        - service [vulns]
-        - data type [fqdn, ip]
+        - service vulns
+            - allowed data type fqdn, ip
 
         :return: None
         """
         try:
             # check if fqdn or ip is given
-            if self.data_type == "fqdn":
-                # check service
-                if self.service == "vulns":
-                    self.report(self.__vulnerabilities_by_fqdn(self.get_data()))
-            elif self.data_type == "ip":
-                # check service
-                if self.service == "vulns":
-                    self.report(self.__vulnerabilities_by_ip(self.get_data()))
-            # not supported data type
+            if self.service == "vulns":
+                if self.data_type == "fqdn":
+                    self.filters["dnsHostname"] = ("dnsName", "=", self.get_data())
+                elif self.data_type == "ip":
+                    self.filters["ip"] = ("ip", "=", self.get_data())
+                else:
+                    self.error("This data type is not supported by this analyzer.")
+                self.report(self.__vulnerabilities())
             else:
-                self.error("This data type is not supported by this analyzer.")
+                self.error("This service ist not supported by this analyzer.")
         except APIError as e:
-            self.error(str(e))
+            self.error(e)
 
     def summary(self, raw):
         """
@@ -123,7 +109,7 @@ class TenableScAnalyzer(Analyzer):
         taxonomies = []
         # mapping severities to level
         level = {
-            "low": "info",
+            "info": "info",
             "low": "info",
             "medium": "suspicious",
             "high": "malicious",
