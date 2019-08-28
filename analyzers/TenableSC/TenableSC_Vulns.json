@@ -23,6 +23,20 @@
       "required": true
     },
     {
+      "name": "username",
+      "description": "Define tenable.sc username",
+      "type": "string",
+      "multi": false,
+      "required": true
+    },
+    {
+      "name": "password",
+      "description": "Define tenable.sc password",
+      "type": "string",
+      "multi": false,
+      "required": true
+    },
+    {
       "name": "verify",
       "description": "Verify ssl cert",
       "type": "boolean",
@@ -36,20 +50,6 @@
       "type": "number",
       "multi": true,
       "required": false
-    },
-    {
-      "name": "username",
-      "description": "Define tenable.sc username",
-      "type": "string",
-      "multi": false,
-      "required": true
-    },
-    {
-      "name": "password",
-      "description": "Define tenable.sc password",
-      "type": "string",
-      "multi": false,
-      "required": true
     }
   ]
 }
