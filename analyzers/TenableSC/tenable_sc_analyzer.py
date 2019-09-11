@@ -110,7 +110,7 @@ class TenableScAnalyzer(Analyzer):
         # mapping severities to level
         level = {
             "info": "info",
-            "low": "info",
+            "low": "safe",
             "medium": "suspicious",
             "high": "malicious",
             "critical": "malicious"
