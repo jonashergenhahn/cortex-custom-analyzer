@@ -20,15 +20,6 @@ class TenableScAnalyzer(Analyzer):
         Analyzer.__init__(self)
 
         self.service = self.get_param("config.service", "vulns")
-        self.filters = {}
-
-        # build filter for repository ids
-        try:
-            self.filters["repositoryIDs"] = ("repositoryIDs", "=", ",".join(
-                map(str, self.get_param("config.repositories")))
-            )
-        except (TypeError, KeyError):
-            pass
 
         # just needed to establish connection to sc
         host = self.get_param("config.hostname", "localhost")
@@ -58,14 +49,30 @@ class TenableScAnalyzer(Analyzer):
             # ignore errors while logout
             pass
 
-    def __vulnerabilities(self):
+    def _vulnerabilities(self):
         """
-        Get vulns from tenable.sc for filter
+        Get vulns from tenable.sc for filters: fqdn or ip and repositoryIDs, if given
 
         :return: a dict with all vulnerabilities for filter
         :rtype: dict
         """
-        return self.sc.analysis.vulns(*self.filters.values(), json_result=True)
+        filters = {}
+        if self.data_type == "fqdn":
+            filters["dnsHostname"] = ("dnsName", "=", self.get_data())
+        elif self.data_type == "ip":
+            filters["ip"] = ("ip", "=", self.get_data())
+        else:
+            self.error("This data type is not supported by this analyzer.")
+
+        # build filter for repository ids
+        try:
+            filters["repositoryIDs"] = ("repositoryIDs", "=", ",".join(
+                map(str, self.get_param("config.repositories")))
+            )
+        except (TypeError, KeyError):
+            pass
+
+        return self.sc.analysis.vulns(*filters.values(), json_result=True)
 
     def run(self):
         """
@@ -80,13 +87,7 @@ class TenableScAnalyzer(Analyzer):
         try:
             # check if fqdn or ip is given
             if self.service == "vulns":
-                if self.data_type == "fqdn":
-                    self.filters["dnsHostname"] = ("dnsName", "=", self.get_data())
-                elif self.data_type == "ip":
-                    self.filters["ip"] = ("ip", "=", self.get_data())
-                else:
-                    self.error("This data type is not supported by this analyzer.")
-                self.report(self.__vulnerabilities())
+                self.report(self._vulnerabilities())
             else:
                 self.error("This service ist not supported by this analyzer.")
         except APIError as e:
