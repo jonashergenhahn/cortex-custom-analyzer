@@ -1,0 +1,43 @@
+<div class="report-Nessus" ng-if="success">
+    <div class="panel panel-info">
+        <div class="panel-heading">
+            Vulnerabilities <strong>{{(artifact.data || artifact.attachment.name) | fang}}</strong>
+        </div>
+        <div class="panel-body" ng-if="content.results == 0">
+            No vulnerabilities found.
+        </div>
+        <div class="panel-body" ng-if="content.results > 0">
+            <table class="table">
+                <thead>
+                    <th>Plugin Id</th>
+                    <th>Plugin Name</th>
+                    <th style="text-align: center">Severity</th>
+                    <th>VPR</th>
+                </thead>
+                <tbody ng-repeat="vuln in content.results | orderBy:'-severity.id'">
+                    <tr>
+                        <td>{{vuln.pluginId}}</td>
+                        <td>{{vuln.name}}</td>
+                        <td>
+                            <span class="label" ng-class="{'0': 'label-info', '1': 'label-success', '2': 'label-warning', '3':'label-danger', '4':'label-danger'}[vuln.severity.id]">
+                               {{vuln.severity.name}}
+                            </span>
+                        </td>
+                        <td>{{vuln.vpr}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<!-- General error  -->
+<div class="panel panel-danger" ng-if="!success">
+    <div class="panel-heading">
+        <strong>{{(artifact.data || artifact.attachment.name) | fang}}</strong>
+    </div>
+    <div class="panel-body">
+        {{content.errorMessage}}
+    </div>
+</div>
